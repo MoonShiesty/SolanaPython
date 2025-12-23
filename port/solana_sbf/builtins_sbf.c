@@ -562,7 +562,8 @@ void _sbf_FILEIO_write(PikaObj* self, Args* args) {
         size_t len = strlen(str);
         written = pika_platform_fwrite(str, 1, len, f);
     } else if (type == ARG_TYPE_BYTES) {
-        uint8_t* bytes = arg_getBytes(aData);
+        /* arg_getBytes returns pointer to [size_t size][data] - skip the size_t prefix */
+        uint8_t* bytes = arg_getBytes(aData) + sizeof(size_t);
         size_t len = arg_getBytesSize(aData);
         written = pika_platform_fwrite(bytes, 1, len, f);
     } else if (argType_isObject(type)) {
@@ -571,7 +572,8 @@ void _sbf_FILEIO_write(PikaObj* self, Args* args) {
         if (obj != NULL) {
             Arg* rawArg = obj_getArg(obj, "raw");
             if (rawArg != NULL && arg_getType(rawArg) == ARG_TYPE_BYTES) {
-                uint8_t* bytes = arg_getBytes(rawArg);
+                /* arg_getBytes returns pointer to [size_t size][data] - skip the size_t prefix */
+                uint8_t* bytes = arg_getBytes(rawArg) + sizeof(size_t);
                 size_t len = arg_getBytesSize(rawArg);
                 written = pika_platform_fwrite(bytes, 1, len, f);
             }
