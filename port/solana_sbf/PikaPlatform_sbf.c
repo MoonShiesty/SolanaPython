@@ -731,9 +731,18 @@ int obj_importModule(PikaObj* self, char* module_name) {
             pikaVM_runByteCode_ex(module, (uint8_t*)code, &cfg);
             /* Note: don't free code - VM may reference it */
         } else {
-            /* Source code - parse and execute */
+            /* Source code - parse and execute with proper module context */
             code[n] = '\0';
-            obj_run(module, code);
+
+            /* Use pikaVM_run_ex with explicit globals to ensure functions
+             * are defined on the module object (not on __pikaMain).
+             * This mirrors how bytecode execution handles it above. */
+            pikaVM_run_ex_cfg src_cfg;
+            pika_platform_memset(&src_cfg, 0, sizeof(src_cfg));
+            src_cfg.globals = module;
+            src_cfg.module_name = module_name;
+            pikaVM_run_ex(module, code, &src_cfg);
+
             pika_platform_free(code);
         }
         return 0;  /* Success */
